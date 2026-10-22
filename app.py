@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# ESTILO VISUAL MODO OSCURO + PANEL IZQUIERDO NEGRO + ESTILO S.I.C.P. CLÁSICO
+# ESTILO VISUAL MODO OSCURO + PANEL IZQUIERDO NEGRO + LUCES LED PARPADEANTES
 st.markdown(
     """
     <style>
@@ -86,6 +86,41 @@ st.markdown(
         display: inline-block;
     }
 
+    /* EFECTO LED PARPADEANTE (ROJO Y VERDE) */
+    @keyframes blink-green {
+        0% { opacity: 1; box-shadow: 0 0 10px #10b981; }
+        50% { opacity: 0.4; box-shadow: 0 0 2px #10b981; }
+        100% { opacity: 1; box-shadow: 0 0 10px #10b981; }
+    }
+    @keyframes blink-red {
+        0% { opacity: 1; box-shadow: 0 0 10px #ef4444; }
+        50% { opacity: 0.4; box-shadow: 0 0 2px #ef4444; }
+        100% { opacity: 1; box-shadow: 0 0 10px #ef4444; }
+    }
+
+    .led-green {
+        background-color: #065f46;
+        color: #d1fae5;
+        border: 2px solid #10b981;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        animation: blink-green 1.5s infinite;
+    }
+    .led-red {
+        background-color: #7f1d1d;
+        color: #fee2e2;
+        border: 2px solid #ef4444;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: bold;
+        text-align: center;
+        animation: blink-red 1.5s infinite;
+    }
+
     /* TARJETAS MÉTRICAS ADAPTADAS A MODO OSCURO */
     .stMetric {
         background-color: #1f2937 !important;
@@ -121,7 +156,6 @@ def check_password():
     )
     st.markdown("### 🔒 Acceso al Sistema")
 
-    # Formulario para permitir pulsar Enter / Intro
     with st.form("login_form"):
       username_input = st.text_input("Usuario")
       password_input = st.text_input("Contraseña", type="password")
@@ -230,7 +264,6 @@ def popup_vacaciones():
 
   anno = st.radio("Año aplicable:", [2026, 2027], horizontal=True)
 
-  # SELECTOR OBLIGATORIO: VACACIONES O MOSCOSO
   tipo_permiso = st.selectbox(
       "Selecciona tipo de día:",
       ["🌴 Día de Vacaciones", "📑 Día Moscoso / Asuntos Propios"],
@@ -310,21 +343,40 @@ def main():
 
   st.markdown("<br>", unsafe_allow_html=True)
 
-  # ENCABEZADO PRINCIPAL CON BADGE
-  col_tit1, col_tit2 = st.columns([3, 1])
+  # ENCABEZADO PRINCIPAL CON SALDO LED PARPADEANTE A FECHA DE HOY
+  col_tit1, col_tit2 = st.columns([2.5, 1.5])
+
   with col_tit1:
-    st.title("CONTROL DE FICHAJE Y JORNADA - DGFP")
+    st.title("CONTROL DE FICHAJE Y JORNADA")
     st.markdown(
-        "**Análisis de fichajes diarios, vacaciones y moscosos — DGFP.v2026-2027**"
-    )
-  with col_tit2:
-    st.markdown(
-        '<div style="text-align: right; padding-top:15px;"><span'
-        ' class="badge-activo">● SERVICIO ACTIVO</span></div>',
-        unsafe_allow_html=True,
+        f"**Usuario:** aespiga | **Fecha Actual:**"
+        f" `{datetime.date.today().strftime('%d/%m/%Y')}`"
     )
 
-  # AVISO DE TERMINAL (Sin la línea anterior de nodo central)
+  with col_tit2:
+    # Simulación de saldo a fecha de hoy (Ejemplo: -0:55 min o +1:30h)
+    # Puedes ajustar este valor o conectarlo a tu cálculo exacto.
+    saldo_minutos = -55  # Cambiar a positivo o negativo según saldo real
+
+    if saldo_minutos < 0:
+      horas_abs = abs(saldo_minutos) // 60
+      mins_abs = abs(saldo_minutos) % 60
+      texto_saldo = f"-{horas_abs}:{mins_abs:02d} min."
+      st.markdown(
+          f'<div style="text-align: center; margin-top: 10px;"><div'
+          f' class="led-red">🔴 SALDO A HOY: {texto_saldo}</div></div>',
+          unsafe_allow_html=True,
+      )
+    else:
+      horas_abs = saldo_minutos // 60
+      mins_abs = saldo_minutos % 60
+      texto_saldo = f"+{horas_abs}:{mins_abs:02d}h."
+      st.markdown(
+          f'<div style="text-align: center; margin-top: 10px;"><div'
+          f' class="led-green">🟢 SALDO A HOY: {texto_saldo}</div></div>',
+          unsafe_allow_html=True,
+      )
+
   st.markdown(
       '<div class="terminal-text">>> AVISO: Periodo de invierno activo (Jornada'
       " estándar de 7:00h). Del 15 Jun al 30 Sep rige jornada de 6:30h.</div>",
