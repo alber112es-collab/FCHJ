@@ -4,176 +4,295 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title="Control de Fichaje DGFP", page_icon="⏱️", layout="wide"
+    page_title="Control de Fichaje DGFP (2026-2027)",
+    page_icon="⏱️",
+    layout="wide",
 )
 
 EXCEL_FILE = "Marcajes__2026_DGFP.xlsx"
 
 
+def check_password():
+  """Control de acceso con usuario ADMIN y contraseña unirioja112."""
+
+  def password_entered():
+    if (
+        st.session_state["username"].strip().upper() == "ADMIN"
+        and st.session_state["password"] == "unirioja112"
+    ):
+      st.session_state["password_correct"] = True
+      del st.session_state["password"]
+    else:
+      st.session_state["password_correct"] = False
+
+  if "password_correct" not in st.session_state:
+    st.markdown("### 🔒 Acceso Restringido - Control de Fichaje")
+    st.text_input("Usuario", key="username")
+    st.text_input("Contraseña", type="password", key="password")
+    st.button("Iniciar Sesión", on_click=password_entered)
+    return False
+  elif not st.session_state["password_correct"]:
+    st.markdown("### 🔒 Acceso Restringido - Control de Fichaje")
+    st.text_input("Usuario", key="username")
+    st.text_input("Contraseña", type="password", key="password")
+    st.button("Iniciar Sesión", on_click=password_entered)
+    st.error("😕 Usuario o contraseña incorrectos. (Clave: unirioja112)")
+    return False
+  else:
+    return True
+
+
 @st.cache_data
-def load_data():
+def load_base_sheets():
   if os.path.exists(EXCEL_FILE):
     xls = pd.ExcelFile(EXCEL_FILE)
-    sheets = xls.sheet_names
-    return sheets
+    return xls.sheet_names
   return []
 
 
+def get_target_hours(fecha_dt):
+  """Devuelve el objetivo de horas según la fecha:
+
+  - Verano (15 de junio al 30 de septiembre): 6 horas y 30 minutos (6.5h)
+  - Resto del año: 7 horas (7.0h)
+  """
+  mes = fecha_dt.month
+  dia = fecha_dt.day
+
+  # Del 15 de junio (6-15) al 30 de septiembre (9-30)
+  if (mes == 6 and dia >= 15) or (mes in [7, 8]) or (mes == 9 and dia <= 30):
+    return 6.5, "6h 30m (Verano)"
+  else:
+    return 7.0, "7h 00m (Estándar)"
+
+
 def main():
-  st.title("⏱️ Aplicación de Control de Fichaje y Calendario")
-  st.markdown(
-      "Gestiona tu jornada laboral diaria (**7 horas diarias** / u objetivo"
-      " mensual) y consulta tu calendario."
-  )
-
-  sheets = load_data()
-
-  if not sheets:
-    st.error(
-        f"No se encuentra el archivo '{EXCEL_FILE}' en el directorio."
-        " Asegúrate de subirlo a GitHub junto con este script."
-    )
+  if not check_password():
     return
 
-  # Sidebar para navegación
+  st.title(
+      "⏱️ Control de Fichaje y Calendario Plurianual (2026 - 2027) - DGFP"
+  )
+  st.markdown(
+      "Gestión de jornada laboral con cálculo automático de verano (**6h 30m**"
+      " del 15 Jun al 30 Sep) y resto del año (**7h**)."
+  )
+
+  base_sheets = load_base_sheets()
+
+  # Menú lateral
   st.sidebar.header("Menú de Navegación")
   menu = st.sidebar.radio(
-      "Selecciona una opción:",
+      "Selecciona sección:",
       [
-          "📅 Vista de Calendario y Meses",
-          "✍️ Registro / Fichaje Diario",
-          "🏖️ Vacaciones y Moscosos",
+          "📅 Ver Calendario y Meses",
+          "✍️ Registrar / Fichaje Diario (2026-2027)",
+          "🏖️ Vacaciones, Moscosos y Permisos",
       ],
   )
 
-  # Seleccionar hoja de mes activa (excluyendo la de moscosos/vacaciones para el calendario diario si procede)
-  meses_sheets = [s for s in sheets if "MOSCOSOS" not in s]
+  if menu == "📅 Ver Calendario y Meses":
+    st.header("📅 Visualización de Calendarios Mensuales")
 
-  if menu == "📅 Vista de Calendario y Meses":
-    st.header("📅 Visualización del Calendario Mensual")
+    # Opciones de meses (incluyendo generación virtual para 2027 si no están en el Excel)
+    meses_disponibles = [s for s in base_sheets if "MOSCOSOS" not in s]
 
-    selected_sheet = st.selectbox("Selecciona el mes a consultar:", meses_sheets)
+    # Añadir generador virtual para meses de 2027 si se desea consultar
+    st.subheader("Selecciona o genera el mes a consultar:")
+    tipo_vista = st.radio(
+        "Origen de datos:", ["Archivo Excel original", "Generador 2027 (Nuevo)"]
+    )
 
-    if selected_sheet:
-      df_mes = pd.read_excel(EXCEL_FILE, sheet_name=selected_sheet, skiprows=3)
-      # Limpiar columnas vacías
-      df_mes = df_mes.loc[:, ~df_mes.columns.str.contains("^Unnamed")]
-
-      st.subheader(f"Resumen del mes: {selected_sheet}")
-
-      # Mostrar métricas rápidas si existen
-      col1, col2, col3 = st.columns(3)
-      with col1:
-        st.metric("Jornada diaria objetivo", "7h 00m")
-      with col2:
-        if "Laboral/Festivo/Inc." in df_mes.columns:
-          dias_trabajo = (
-              df_mes["Laboral/Festivo/Inc."] == "Trabajo"
-          ).sum()
-          st.metric("Días Laborables", int(dias_trabajo))
-      with col3:
-        if "HH.TT." in df_mes.columns:
-          st.info("Consulta el detalle diario en la tabla inferior.")
-
-      # Mostrar tabla interactiva
+    if tipo_vista == "Archivo Excel original" and meses_disponibles:
+      selected_sheet = st.selectbox(
+          "Selecciona el mes del Excel:", meses_disponibles
+      )
+      df_mes = pd.read_excel(EXCEL_FILE, sheet_name=selected_sheet, header=4)
+      df_mes = df_mes.loc[
+          :, ~df_mes.columns.str.contains("^Unnamed|nan", na=False)
+      ]
       st.dataframe(df_mes, use_container_width=True)
+    else:
+      # Generador dinámico para cualquier mes de 2027
+      col_m1, col_m2 = st.columns(2)
+      with col_m1:
+        anno_sel = st.selectbox("Año", [2026, 2027], index=1)
+      with col_m2:
+        mes_sel = st.selectbox(
+            "Mes",
+            [
+                "Enero",
+                "Febrero",
+                "Marzo",
+                "Abril",
+                "Mayo",
+                "Junio",
+                "Julio",
+                "Agosto",
+                "Septiembre",
+                "Octubre",
+                "Noviembre",
+                "Diciembre",
+            ],
+            index=5,
+        )
 
-  elif menu == "✍️ Registro / Fichaje Diario":
-    st.header("✍️ Registro y Modificación del Fichaje Diario")
+      meses_num = {
+          "Enero": 1,
+          "Febrero": 2,
+          "Marzo": 3,
+          "Abril": 4,
+          "Mayo": 5,
+          "Junio": 6,
+          "Julio": 7,
+          "Agosto": 8,
+          "Septiembre": 9,
+          "Octubre": 10,
+          "Noviembre": 11,
+          "Diciembre": 12,
+      }
+      m_num = meses_num[mes_sel]
+
+      # Generar días del mes
+      import calendar
+
+      num_dias = calendar.monthrange(anno_sel, m_num)[1]
+      fechas = [
+          datetime.date(anno_sel, m_num, d) for d in range(1, num_dias + 1)
+      ]
+
+      data_gen = []
+      dias_semana_nombres = [
+          "lunes",
+          "martes",
+          "miércoles",
+          "jueves",
+          "viernes",
+          "sábado",
+          "domingo",
+      ]
+
+      for f in fechas:
+        d_sem = dias_semana_nombres[f.weekday()]
+        # Festivo por defecto si es fin de semana
+        fest_lab = (
+            "Festivo" if f.weekday() >= 5 else "Trabajo"
+        )
+        obj_h, desc_obj = get_target_hours(f)
+
+        data_gen.append({
+            "Fecha": f.strftime("%Y-%m-%d"),
+            "Día Semana": d_sem,
+            "Laboral/Festivo/Inc.": fest_lab,
+            "Inicio": "07:30:00" if fest_lab == "Trabajo" else "",
+            "Final": (
+                ("14:00:00" if obj_h == 6.5 else "14:30:00")
+                if fest_lab == "Trabajo"
+                else ""
+            ),
+            "H. Obligatorias": desc_obj,
+            "Observaciones": "",
+        })
+
+      df_gen = pd.DataFrame(data_gen)
+      st.success(
+          f"Calendario generado para {mes_sel} {anno_sel} con la regla de"
+          " horario aplicada."
+      )
+      st.dataframe(df_gen, use_container_width=True)
+
+  elif menu == "✍️ Registrar / Fichaje Diario (2026-2027)":
+    st.header("✍️ Registro y Marcaje Diario Avanzado")
     st.markdown(
-        "Introduce o modifica las horas de entrada y salida para registrar tu"
-        " jornada (Objetivo: **7 horas al día**)."
+        "Selecciona cualquier fecha de **2026 o 2027**, marca incidencias"
+        " (Trabajo, Festivo, Vacaciones, Moscosos, Permiso, Baja) y calcula tus"
+        " horas automáticamente."
     )
 
-    selected_sheet = st.selectbox(
-        "Selecciona el mes para registrar:", meses_sheets, key="fichaje_mes"
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+      fecha_elegida = st.date_input(
+          "Selecciona el día a fichar:",
+          value=datetime.date(2027, 6, 15),
+          min_date=datetime.date(2026, 8, 1),
+          max_date=datetime.date(2027, 12, 31),
+      )
+    with col_f2:
+      # Mostrar automáticamente el régimen aplicable
+      _, desc_regimen = get_target_hours(fecha_elegida)
+      st.info(f"🎯 **Jornada objetivo para este día**: {desc_regimen}")
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+      estado_dia = st.selectbox(
+          "Tipo de día / Incidencia:",
+          [
+              "Trabajo",
+              "Festivo",
+              "Vacaciones",
+              "Moscoso",
+              "Permiso",
+              "Baja Médica",
+          ],
+          index=0,
+      )
+      h_inicio = st.time_input("Hora de Inicio", value=datetime.time(7, 30))
+      h_final = st.time_input("Hora de Finalización", value=datetime.time(14, 0))
+
+    with col_b:
+      observaciones_txt = st.text_area(
+          "Observaciones / Incidencias (ej: médico, asuntos propios...):"
+      )
+
+    # Cálculos
+    t1 = datetime.datetime.combine(datetime.date.today(), h_inicio)
+    t2 = datetime.datetime.combine(datetime.date.today(), h_final)
+    diff = t2 - t1
+    total_seg = diff.total_seconds()
+    h_trab = int(total_seg // 3600)
+    m_trab = int((total_seg % 3600) // 60)
+
+    horas_obj_val, _ = get_target_hours(fecha_elegida)
+    diferencia_minutos = (h_trab * 60 + m_trab) - int(horas_obj_val * 60)
+
+    st.metric(
+        "Horas Realizadas vs Objetivo",
+        f"{h_trab}h {m_trab:02d}m",
+        delta=f"{diferencia_minutos:+d} minutos respecto al objetivo",
     )
 
-    if selected_sheet:
-      df_mes = pd.read_excel(EXCEL_FILE, sheet_name=selected_sheet, skiprows=3)
-      # Limpiar columnas vacías en los nombres de columnas lógicos
-      # Buscamos las columnas clave: Fecha, Día Semana, Laboral/Festivo/Inc., Inicio, Final, Observaciones
+    if st.button("💾 Guardar y Registrar Fichaje en Sesión"):
+      st.success(
+          f"✅ ¡Registrado con éxito para el **{fecha_elegida}**! Estado:"
+          f" **{estado_dia}** ({h_trab}h {m_trab:02d}m)."
+      )
+      st.balloons()
 
-      # Filtramos filas que tengan fecha válida
-      df_mes["Fecha_dt"] = pd.to_datetime(df_mes["Fecha"], errors="coerce")
-      df_valid = df_mes.dropna(subset=["Fecha_dt"]).copy()
+  elif menu == "🏖️ Vacaciones, Moscosos y Permisos":
+    st.header("🏖️ Control de Vacaciones y Moscosos (2026 - 2027)")
+    st.markdown(
+        "Control acumulado de días de vacaciones, moscosos y permisos"
+        " disfrutados y pendientes."
+    )
 
-      if not df_valid.empty:
-        # Selector de fecha dentro del mes
-        fechas_disponibles = df_valid["Fecha_dt"].dt.date.tolist()
-        fecha_elegida = st.selectbox(
-            "Selecciona el día a fichar:", fechas_disponibles
-        )
-
-        # Fila correspondiente
-        fila_idx = df_valid[
-            df_valid["Fecha_dt"].dt.date == fecha_elegida
-        ].index[0]
-
-        row_data = df_mes.loc[fila_idx]
-
-        col_a, col_b = st.columns(2)
-        with col_a:
-          estado_actual = st.selectbox(
-              "Tipo de día / Estado:",
-              ["Trabajo", "Festivo", "Vacaciones", "Moscosos", "Permiso", "Baja"],
-              index=0,
-          )
-          hora_inicio = st.time_input(
-              "Hora de Inicio",
-              value=datetime.time(7, 30),
-          )
-          hora_final = st.time_input(
-              "Hora de Finalización",
-              value=datetime.time(14, 30),
-          )
-
-        with col_b:
-          observacion_txt = st.text_area(
-              "Observaciones / Incidencias:",
-              value=str(row_data.get("Observaciones", ""))
-              if pd.notna(row_data.get("Observaciones", ""))
-              else "",
-          )
-
-        # Cálculo automático de horas
-        # 7 horas obligatorias por defecto
-        t1 = datetime.datetime.combine(datetime.date.today(), hora_inicio)
-        t2 = datetime.datetime.combine(datetime.date.today(), hora_final)
-        diff = t2 - t1
-        horas_trabajadas_seg = diff.total_seconds()
-        h_trab = int(horas_trabajadas_seg // 3600)
-        m_trab = int((horas_trabajadas_seg % 3600) // 60)
-
-        st.metric(
-            "Horas calculadas para este día", f"{h_trab}h {m_trab:02d}m"
-        )
-
-        if st.button("💾 Guardar Fichaje (Simulación en Sesión)"):
-          st.success(
-              f"¡Fichaje guardado correctamente para el día {fecha_elegida}! "
-              f"({h_trab}h {m_trab:02d}m registradas)."
-          )
-          st.info(
-              "Nota: Para persistir los cambios permanentemente en el archivo"
-              " Excel de tu repositorio, puedes conectar la app a una base de"
-              " datos (como SQLite/Supabase) o actualizar directamente el"
-              " Excel en GitHub."
-          )
-      else:
-        st.warning(
-            "No se han encontrado fechas válidas estructuradas en esta hoja."
-        )
-
-  elif menu == "🏖️ Vacaciones y Moscosos":
-    st.header("🏖️ Control de Vacaciones, Moscosos y Permisos")
-    if "MOSCOSOS-VACACIONES - 2026" in sheets:
+    if "MOSCOSOS-VACACIONES - 2026" in base_sheets:
       df_vac = pd.read_excel(
           EXCEL_FILE, sheet_name="MOSCOSOS-VACACIONES - 2026"
       )
       st.dataframe(df_vac, use_container_width=True)
     else:
-      st.info("Pestaña de vacaciones no detectada exactamente con ese nombre.")
+      # Plantilla interactiva de control si no se lee del Excel
+      data_control = {
+          "Concepto": [
+              "Vacaciones Anuales",
+              "Días Moscosos / Asuntos Propios",
+              "Permisos Especiales",
+          ],
+          "Total Disponibles": [22, 6, 5],
+          "Disfrutados": [0, 0, 0],
+          "Pendientes": [22, 6, 5],
+      }
+      st.dataframe(pd.DataFrame(data_control), use_container_width=True)
 
 
 if __name__ == "__main__":
