@@ -59,7 +59,6 @@ def get_target_hours(fecha_dt):
   mes = fecha_dt.month
   dia = fecha_dt.day
 
-  # Del 15 de junio (6-15) al 30 de septiembre (9-30)
   if (mes == 6 and dia >= 15) or (mes in [7, 8]) or (mes == 9 and dia <= 30):
     return 6.5, "6h 30m (Verano)"
   else:
@@ -94,10 +93,8 @@ def main():
   if menu == "📅 Ver Calendario y Meses":
     st.header("📅 Visualización de Calendarios Mensuales")
 
-    # Opciones de meses (incluyendo generación virtual para 2027 si no están en el Excel)
     meses_disponibles = [s for s in base_sheets if "MOSCOSOS" not in s]
 
-    # Añadir generador virtual para meses de 2027 si se desea consultar
     st.subheader("Selecciona o genera el mes a consultar:")
     tipo_vista = st.radio(
         "Origen de datos:", ["Archivo Excel original", "Generador 2027 (Nuevo)"]
@@ -113,7 +110,6 @@ def main():
       ]
       st.dataframe(df_mes, use_container_width=True)
     else:
-      # Generador dinámico para cualquier mes de 2027
       col_m1, col_m2 = st.columns(2)
       with col_m1:
         anno_sel = st.selectbox("Año", [2026, 2027], index=1)
@@ -153,7 +149,6 @@ def main():
       }
       m_num = meses_num[mes_sel]
 
-      # Generar días del mes
       import calendar
 
       num_dias = calendar.monthrange(anno_sel, m_num)[1]
@@ -174,7 +169,6 @@ def main():
 
       for f in fechas:
         d_sem = dias_semana_nombres[f.weekday()]
-        # Festivo por defecto si es fin de semana
         fest_lab = (
             "Festivo" if f.weekday() >= 5 else "Trabajo"
         )
@@ -211,14 +205,14 @@ def main():
 
     col_f1, col_f2 = st.columns(2)
     with col_f1:
+      # CORREGIDO: min_value y max_value en lugar de min_date y max_date
       fecha_elegida = st.date_input(
           "Selecciona el día a fichar:",
           value=datetime.date(2027, 6, 15),
-          min_date=datetime.date(2026, 8, 1),
-          max_date=datetime.date(2027, 12, 31),
+          min_value=datetime.date(2026, 8, 1),
+          max_value=datetime.date(2027, 12, 31),
       )
     with col_f2:
-      # Mostrar automáticamente el régimen aplicable
       _, desc_regimen = get_target_hours(fecha_elegida)
       st.info(f"🎯 **Jornada objetivo para este día**: {desc_regimen}")
 
@@ -244,7 +238,6 @@ def main():
           "Observaciones / Incidencias (ej: médico, asuntos propios...):"
       )
 
-    # Cálculos
     t1 = datetime.datetime.combine(datetime.date.today(), h_inicio)
     t2 = datetime.datetime.combine(datetime.date.today(), h_final)
     diff = t2 - t1
@@ -281,7 +274,6 @@ def main():
       )
       st.dataframe(df_vac, use_container_width=True)
     else:
-      # Plantilla interactiva de control si no se lee del Excel
       data_control = {
           "Concepto": [
               "Vacaciones Anuales",
