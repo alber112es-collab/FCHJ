@@ -5,36 +5,59 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title="Control de Fichaje y Vacaciones DGFP",
-    page_icon="⏱️",
+    page_title="Control de Fichaje Win98 - DGFP",
+    page_icon="💻",
     layout="wide",
 )
 
-# Estilo visual corporativo y limpio similar a tus otras apps de Streamlit
+# Estilo visual RETRO / Windows 98
 st.markdown("""
     <style>
+    /* Fondo general estilo escritorio clásico (Verde cian o gris oscuro de Win98) */
     .main {
-        background-color: #f8f9fa;
+        background-color: #008080;
+        font-family: "MS Sans Serif", Arial, sans-serif;
     }
-    .stMetric {
-        background-color: #ffffff;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        border: 1px solid #e5e7eb;
+    
+    /* Contenedores estilo ventana de Windows 98 */
+    .stApp {
+        background-color: #008080;
     }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
+    
+    /* Cajas y métricas estilo ventana de diálogo */
+    .stMetric, div.stButton > button, div.stSelectbox, div.stDateInput, div.stTextInput, div.stTextArea {
+        background-color: #c0c0c0 !important;
+        border: 2px solid;
+        border-color: #ffffff #dfdfdf #dfdfdf #ffffff !important;
+        box-shadow: inset 1px 1px #0a0a0a, 1px 1px #ffffff;
+        color: #000000 !important;
+        border-radius: 0px !important;
     }
-    .stTabs [data-baseweb="tab"] {
-        background-color: #f1f5f9;
-        border-radius: 6px 6px 0px 0px;
-        padding: 10px 20px;
-        font-weight: 600;
+    
+    /* Botones clásicos Win98 */
+    div.stButton > button {
+        background-color: #c0c0c0 !important;
+        color: #000000 !important;
+        font-weight: bold;
+        padding: 5px 15px;
+        border: 2px solid;
+        border-color: #ffffff #808080 #808080 #ffffff !important;
     }
-    .stTabs [aria-selected="true"] {
-        background-color: #2563eb !important;
-        color: white !important;
+    div.stButton > button:active {
+        border-color: #808080 #ffffff #ffffff #808080 !important;
+    }
+
+    /* Cabeceras de ventana clásica */
+    h1, h2, h3 {
+        color: #ffffff;
+        text-shadow: 2px 2px #000000;
+        font-family: "MS Sans Serif", Arial, sans-serif;
+    }
+    
+    /* Sidebar clásico */
+    [data-testid="stSidebar"] {
+        background-color: #c0c0c0;
+        border-right: 2px solid #808080;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -56,17 +79,17 @@ def check_password():
       st.session_state["password_correct"] = False
 
   if "password_correct" not in st.session_state:
-    st.markdown("### 🔒 Acceso Restringido - Control DGFP")
+    st.markdown("### 🗂️ Acceso al Sistema - Windows 98 Edition")
     st.text_input("Usuario", key="username")
     st.text_input("Contraseña", type="password", key="password")
-    st.button("Iniciar Sesión", on_click=password_entered)
+    st.button("Aceptar", on_click=password_entered)
     return False
   elif not st.session_state["password_correct"]:
-    st.markdown("### 🔒 Acceso Restringido - Control DGFP")
+    st.markdown("### 🗂️ Acceso al Sistema - Windows 98 Edition")
     st.text_input("Usuario", key="username")
     st.text_input("Contraseña", type="password", key="password")
-    st.button("Iniciar Sesión", on_click=password_entered)
-    st.error("😕 Usuario o contraseña incorrectos. (Clave: unirioja112)")
+    st.button("Aceptar", on_click=password_entered)
+    st.error("❌ Contraseña o usuario incorrecto. (Clave: unirioja112)")
     return False
   else:
     return True
@@ -94,15 +117,15 @@ def main():
   if not check_password():
     return
 
-  st.title("⏱️ Control de Fichaje, Vacaciones y Moscosos")
-  st.markdown("Dirección General de Función Pública (DGFP) — Panel de Control Plurianual")
+  st.title("💻 Control de Fichaje y Vacaciones [DGFP]")
+  st.markdown("Sistema Operativo de Control Horario — Versión Clásica")
 
   base_sheets = load_base_sheets()
 
   # Menú lateral
-  st.sidebar.header("Menú Principal")
+  st.sidebar.header("📂 Explorador Principal")
   menu = st.sidebar.radio(
-      "Selecciona sección:",
+      "Seleccionar aplicación:",
       [
           "📅 Ver Calendario Mensual",
           "✍️ Registrar / Fichaje Diario",
@@ -111,7 +134,7 @@ def main():
   )
 
   if menu == "📅 Ver Calendario Mensual":
-    st.header("📅 Visualización de Calendarios Mensuales")
+    st.header("📅 Explorador de Calendarios Mensuales")
     col_m1, col_m2 = st.columns(2)
     with col_m1:
       anno_sel = st.selectbox("Año", [2026, 2027], index=0)
@@ -160,7 +183,7 @@ def main():
     st.dataframe(df_gen, use_container_width=True)
 
   elif menu == "✍️ Registrar / Fichaje Diario":
-    st.header("✍️ Registro y Marcaje Diario")
+    st.header("✍️ Terminal de Fichaje Diario")
     col_f1, col_f2 = st.columns(2)
     with col_f1:
       fecha_elegida = st.date_input(
@@ -201,15 +224,15 @@ def main():
         delta=f"{diferencia_minutos:+d} minutos respecto al objetivo",
     )
 
-    if st.button("💾 Guardar y Registrar Fichaje", type="primary"):
+    if st.button("💾 Guardar Registro"):
       st.success(
-          f"✅ ¡Registrado con éxito para el **{fecha_elegida}**! Estado:"
+          f"💾 ¡Guardado con éxito en el sistema para el **{fecha_elegida}**! Estado:"
           f" **{estado_dia}** ({h_trab}h {m_trab:02d}m)."
       )
 
   elif menu == "🏖️ Vacaciones y Moscosos (2026 y 2027)":
-    st.header("🏖️ Control de Vacaciones y Moscosos")
-    st.markdown("Gestión detallada de saldos y periodos para los años **2026** y **2027**.")
+    st.header("🏖️ Gestor de Vacaciones y Moscosos")
+    st.markdown("Control de saldos y periodos vacacionales (2026 y 2027).")
 
     tab_2026, tab_2027 = st.tabs(
         ["📅 Año 2026 (Restantes: 3 Vacaciones)", "📅 Año 2027 (Totales: 22/8)"]
