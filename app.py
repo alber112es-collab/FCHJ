@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title="S.I.C.P. - Control de Fichaje y Vacaciones DGFP",
+    page_title="CONTROL DE FICHAJE Y JORNADA - DGFP",
     page_icon="⚡",
     layout="wide",
 )
@@ -386,6 +386,39 @@ def main():
   if not check_password():
     return
 
+  # TÍTULO PRINCIPAL ARRIBA DEL TODO
+  col_tit1, col_tit2 = st.columns([2.5, 1.5])
+  with col_tit1:
+    st.title("CONTROL DE FICHAJE Y JORNADA")
+    st.markdown(
+        f"**Usuario:** aespiga | **Cierre a fecha de ayer"
+        f" ({(datetime.date.today() - datetime.timedelta(days=1)).strftime('%d/%m/%Y')}):**"
+    )
+
+  with col_tit2:
+    saldo_minutos = 2  # +0:02 min real a fecha de ayer
+
+    if saldo_minutos < 0:
+      horas_abs = abs(saldo_minutos) // 60
+      mins_abs = abs(saldo_minutos) % 60
+      texto_saldo = f"-{horas_abs}:{mins_abs:02d} min."
+      st.markdown(
+          f'<div style="text-align: center; margin-top: 10px;"><div'
+          f' class="led-red">🔴 SALDO (AYER): {texto_saldo}</div></div>',
+          unsafe_allow_html=True,
+      )
+    else:
+      horas_abs = saldo_minutos // 60
+      mins_abs = saldo_minutos % 60
+      texto_saldo = f"+{horas_abs}:{mins_abs:02d}h."
+      st.markdown(
+          f'<div style="text-align: center; margin-top: 10px;"><div'
+          f' class="led-green">🟢 SALDO (AYER): {texto_saldo}</div></div>',
+          unsafe_allow_html=True,
+      )
+
+  st.markdown("<br>", unsafe_allow_html=True)
+
   # BARRA SUPERIOR DE VENTANA INSTITUCIONAL
   st.markdown(
       """
@@ -422,40 +455,6 @@ def main():
       st.rerun()
 
   st.markdown("<br>", unsafe_allow_html=True)
-
-  # ENCABEZADO PRINCIPAL CON SALDO LED A FECHA DE AYER (+0:02)
-  col_tit1, col_tit2 = st.columns([2.5, 1.5])
-
-  fecha_ayer = datetime.date.today() - datetime.timedelta(days=1)
-
-  with col_tit1:
-    st.title("CONTROL DE FICHAJE Y JORNADA")
-    st.markdown(
-        f"**Usuario:** aespiga | **Cierre a fecha de ayer"
-        f" ({fecha_ayer.strftime('%d/%m/%Y')}):**"
-    )
-
-  with col_tit2:
-    saldo_minutos = 2  # +0:02 min. real a fecha de ayer
-
-    if saldo_minutos < 0:
-      horas_abs = abs(saldo_minutos) // 60
-      mins_abs = abs(saldo_minutos) % 60
-      texto_saldo = f"-{horas_abs}:{mins_abs:02d} min."
-      st.markdown(
-          f'<div style="text-align: center; margin-top: 10px;"><div'
-          f' class="led-red">🔴 SALDO (AYER): {texto_saldo}</div></div>',
-          unsafe_allow_html=True,
-      )
-    else:
-      horas_abs = saldo_minutos // 60
-      mins_abs = saldo_minutos % 60
-      texto_saldo = f"+{horas_abs}:{mins_abs:02d}h."
-      st.markdown(
-          f'<div style="text-align: center; margin-top: 10px;"><div'
-          f' class="led-green">🟢 SALDO (AYER): {texto_saldo}</div></div>',
-          unsafe_allow_html=True,
-      )
 
   st.markdown(
       '<div class="terminal-text">>> AVISO: Periodo de invierno activo (Jornada'
