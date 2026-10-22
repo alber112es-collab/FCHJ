@@ -20,7 +20,7 @@ st.markdown(
         color: #ffffff;
     }
     
-    /* Panel lateral de la izquierda NEGRO */
+    /* Panel lateral de la izquierda NEGRO con título CONTROL HORARIO */
     [data-testid="stSidebar"] {
         background-color: #1a1c23 !important;
         border-right: 2px solid #333333;
@@ -109,40 +109,36 @@ EXCEL_FILE = "Marcajes__2026_DGFP.xlsx"
 
 
 def check_password():
-  """Control de acceso con usuario ADMIN y contraseña unirioja112."""
-
-  def password_entered():
-    if (
-        st.session_state["username"].strip().upper() == "ADMIN"
-        and st.session_state["password"] == "unirioja112"
-    ):
-      st.session_state["password_correct"] = True
-      del st.session_state["password"]
-    else:
-      st.session_state["password_correct"] = False
-
+  """Control de acceso con usuario aespiga y contraseña unirioja112 (permite Enter)."""
   if "password_correct" not in st.session_state:
+    st.session_state["password_correct"] = False
+
+  if not st.session_state["password_correct"]:
     st.markdown(
         '<div class="win-header">⚡ S.I.C.P. - Módulo de Fichaje y Registro de'
         ' Jornada [SESIÓN: RESTRINGIDA]</div>',
         unsafe_allow_html=True,
     )
     st.markdown("### 🔒 Acceso al Sistema")
-    st.text_input("Usuario", key="username")
-    st.text_input("Contraseña", type="password", key="password")
-    st.button("Iniciar Sesión", on_click=password_entered)
-    return False
-  elif not st.session_state["password_correct"]:
-    st.markdown(
-        '<div class="win-header">⚡ S.I.C.P. - Módulo de Fichaje y Registro de'
-        ' Jornada [SESIÓN: RESTRINGIDA]</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown("### 🔒 Acceso al Sistema")
-    st.text_input("Usuario", key="username")
-    st.text_input("Contraseña", type="password", key="password")
-    st.button("Iniciar Sesión", on_click=password_entered)
-    st.error("❌ Usuario o contraseña incorrectos. (Clave: unirioja112)")
+
+    # Formulario para permitir pulsar Enter / Intro
+    with st.form("login_form"):
+      username_input = st.text_input("Usuario")
+      password_input = st.text_input("Contraseña", type="password")
+      submit_button = st.form_submit_button("Iniciar Sesión")
+
+      if submit_button:
+        if (
+            username_input.strip().lower() == "aespiga"
+            and password_input == "unirioja112"
+        ):
+          st.session_state["password_correct"] = True
+          st.rerun()
+        else:
+          st.error(
+              "❌ Usuario o contraseña incorrectos. (Usuario: aespiga / Clave:"
+              " unirioja112)"
+          )
     return False
   else:
     return True
@@ -281,7 +277,7 @@ def main():
   st.markdown(
       """
         <div class="win-header">
-            <span>⚡ S.I.C.P. - Módulo de Fichaje y Control Horario (v1.2.49) [SESIÓN: ADMIN_DGFP]</span>
+            <span>⚡ S.I.C.P. - Módulo de Fichaje y Control Horario (v1.2.49) [SESIÓN: AESPIGA]</span>
             <span>_ &nbsp; ▫ &nbsp; X</span>
         </div>
         <div class="win-menu-bar">
@@ -328,12 +324,7 @@ def main():
         unsafe_allow_html=True,
     )
 
-  # LÍNEAS DE TERMINAL ESTILO DE LA IMAGEN
-  st.markdown(
-      '<div class="terminal-text">>> ESTADO DEL ENTORNO: Conectado al nodo'
-      " central de fichaje de función pública.</div>",
-      unsafe_allow_html=True,
-  )
+  # AVISO DE TERMINAL (Sin la línea anterior de nodo central)
   st.markdown(
       '<div class="terminal-text">>> AVISO: Periodo de invierno activo (Jornada'
       " estándar de 7:00h). Del 15 Jun al 30 Sep rige jornada de 6:30h.</div>",
@@ -342,8 +333,8 @@ def main():
 
   st.markdown("---")
 
-  # MENÚ LATERAL EN NEGRO
-  st.sidebar.markdown("## 🗂️ MENÚ NEGRO")
+  # MENÚ LATERAL - CONTROL HORARIO
+  st.sidebar.markdown("## 🗂️ CONTROL HORARIO")
   menu = st.sidebar.radio(
       "Seleccionar módulo:",
       [
