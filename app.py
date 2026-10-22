@@ -10,14 +10,14 @@ st.set_page_config(
     layout="wide",
 )
 
-# ESTILO VISUAL FIEL A LA IMAGEN (S.I.C.P. / Windows Clásico + Panel Izquierdo Negro)
+# ESTILO VISUAL MODO OSCURO + PANEL IZQUIERDO NEGRO + ESTILO S.I.C.P. CLÁSICO
 st.markdown(
     """
     <style>
-    /* Fondo principal estilo sistema clásico */
     .main {
-        background-color: #f3f2e8;
+        background-color: #0e1117;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #ffffff;
     }
     
     /* Panel lateral de la izquierda NEGRO */
@@ -40,58 +40,45 @@ st.markdown(
         justify-content: space-between;
         align-items: center;
         border-radius: 4px 4px 0 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
     
-    /* Menú superior de texto */
     .win-menu-bar {
-        background-color: #e8e6d9;
+        background-color: #262730;
         padding: 4px 10px;
         font-size: 12px;
-        border-bottom: 1px solid #c0c0c0;
-        color: #222222;
+        border-bottom: 1px solid #4f46e5;
+        color: #d1d5db;
     }
     .win-menu-bar span {
         margin-right: 15px;
         cursor: pointer;
     }
     
-    /* Toolbar de botones clásicos con borde biselado */
-    .win-toolbar {
-        background-color: #edebe0;
-        padding: 6px 10px;
-        border-bottom: 2px solid #d0cebe;
-        display: flex;
-        gap: 8px;
-    }
-    
-    /* Botones estilo clásico */
     div.stButton > button {
-        background-color: #f0eee2 !important;
-        color: #111111 !important;
-        border: 1px solid #b5b3a3 !important;
-        box-shadow: 1px 1px 0px #ffffff inset, -1px -1px 0px #9a9889 inset;
+        background-color: #262730 !important;
+        color: #ffffff !important;
+        border: 1px solid #4b5563 !important;
         border-radius: 3px !important;
         font-weight: 600;
         font-size: 13px;
     }
     div.stButton > button:hover {
-        background-color: #e4e2d4 !important;
+        background-color: #374151 !important;
+        border-color: #9ca3af !important;
     }
 
-    /* Consola o avisos estilo terminal */
     .terminal-text {
         font-family: 'Courier New', Courier, monospace;
-        color: #1e3a8a;
+        color: #60a5fa;
         font-weight: bold;
         font-size: 13px;
         margin-bottom: 5px;
     }
     
-    /* Badge verde de SERVICIO ACTIVO */
     .badge-activo {
-        background-color: #d1fae5;
-        color: #065f46;
+        background-color: #065f46;
+        color: #d1fae5;
         padding: 4px 10px;
         border-radius: 12px;
         font-size: 12px;
@@ -99,12 +86,19 @@ st.markdown(
         display: inline-block;
     }
 
-    /* Cajas y métricas */
+    /* TARJETAS MÉTRICAS ADAPTADAS A MODO OSCURO */
     .stMetric {
-        background-color: #ffffff !important;
-        border: 1px solid #d1d5db !important;
-        border-radius: 4px !important;
-        padding: 10px !important;
+        background-color: #1f2937 !important;
+        border: 1px solid #374151 !important;
+        border-radius: 6px !important;
+        padding: 15px !important;
+        color: #ffffff !important;
+    }
+    .stMetric label {
+        color: #9ca3af !important;
+    }
+    .stMetric [data-testid="stMetricValue"] {
+        color: #ffffff !important;
     }
     </style>
 """,
@@ -163,13 +157,16 @@ def load_base_sheets():
 
 
 def get_target_hours(fecha_dt):
-  """Regla de verano: 15 Jun al 30 Sep = 6h 30m (6.5h), resto = 7h."""
+  """Regla de verano: 15 Jun al 30 Sep = 6h 30m (6.5h).
+
+  Resto del año (Horario de Invierno) = 7 horas (7.0h).
+  """
   mes = fecha_dt.month
   dia = fecha_dt.day
   if (mes == 6 and dia >= 15) or (mes in [7, 8]) or (mes == 9 and dia <= 30):
     return 6.5, "6h 30m (Verano)"
   else:
-    return 7.0, "7h 00m (Estándar)"
+    return 7.0, "7h 00m (Horario de Invierno / Estándar)"
 
 
 # VENTANA EMERGENTE (POPUP) PARA REGISTRO / FICHAJE DIARIO
@@ -179,12 +176,12 @@ def popup_fichaje():
 
   fecha_elegida = st.date_input(
       "Selecciona la fecha:",
-      value=datetime.date(2026, 8, 3),
+      value=datetime.date.today(),
       min_value=datetime.date(2026, 8, 1),
       max_value=datetime.date(2027, 12, 31),
   )
 
-  _, desc_regimen = get_target_hours(fecha_elegida)
+  horas_obj, desc_regimen = get_target_hours(fecha_elegida)
   st.info(f"🎯 **Jornada objetivo para este día**: {desc_regimen}")
 
   col_a, col_b = st.columns(2)
@@ -195,7 +192,10 @@ def popup_fichaje():
     )
     h_inicio = st.time_input("Hora de Entrada", value=datetime.time(7, 30))
   with col_b:
-    h_final = st.time_input("Hora de Salida", value=datetime.time(14, 0))
+    h_final = st.time_input(
+        "Hora de Salida",
+        value=datetime.time(14, 30) if horas_obj == 7.0 else datetime.time(14, 0),
+    )
     observaciones = st.text_input("Observaciones")
 
   t1 = datetime.datetime.combine(datetime.date.today(), h_inicio)
@@ -204,11 +204,22 @@ def popup_fichaje():
   h_trab = int(diff.total_seconds() // 3600)
   m_trab = int((diff.total_seconds() % 3600) // 60)
 
-  st.write(f"⏱️ **Horas calculadas**: {h_trab}h {m_trab:02d}m")
+  diferencia_minutos = (h_trab * 60 + m_trab) - int(horas_obj * 60)
+
+  st.write(
+      f"⏱️ **Horas calculadas**: {h_trab}h {m_trab:02d}m (Objetivada en"
+      f" {horas_obj}h)"
+  )
+  st.metric(
+      "Balance diario",
+      f"{h_trab}h {m_trab:02d}m",
+      delta=f"{diferencia_minutos:+d} minutos respecto al objetivo",
+  )
 
   if st.button("💾 Confirmar y Guardar Fichaje"):
     st.success(
-        f"¡Fichaje registrado para el {fecha_elegida}! ({h_trab}h {m_trab:02d}m)"
+        f"✅ ¡Fichaje registrado para el {fecha_elegida}! ({h_trab}h"
+        f" {m_trab:02d}m)"
     )
     st.rerun()
 
@@ -216,12 +227,15 @@ def popup_fichaje():
 # VENTANA EMERGENTE (POPUP) PARA VACACIONES Y MOSCOSOS CON SELECTOR
 @st.dialog("🏖️ Solicitar / Registrar Vacaciones o Moscosos")
 def popup_vacaciones():
-  st.write("Selecciona el tipo de permiso e introduce el rango de fechas:")
+  st.write(
+      "Selecciona si se trata de un día de Vacaciones o un Moscoso e introduce"
+      " las fechas:"
+  )
 
   anno = st.radio("Año aplicable:", [2026, 2027], horizontal=True)
 
-  # SELECTOR PERMITE ELEGIR SI ES VACACIONES O MOSCOSOS
-  tipo_permiso = st.radio(
+  # SELECTOR OBLIGATORIO: VACACIONES O MOSCOSO
+  tipo_permiso = st.selectbox(
       "Selecciona tipo de día:",
       ["🌴 Día de Vacaciones", "📑 Día Moscoso / Asuntos Propios"],
   )
@@ -248,13 +262,13 @@ def popup_vacaciones():
 
   st.write(
       f"📊 **Total días a computar**: **{dias_solicitados} día(s)** como"
-      f" **{tipo_permiso}**."
+      f" **{tipo_permiso}** para el año **{anno}**."
   )
 
   if st.button("💾 Guardar Permiso en Sistema"):
     st.success(
         f"✅ ¡Se han registrado {dias_solicitados} día(s) de {tipo_permiso} para"
-        f" el año {anno}!"
+        f" el año {anno} con éxito!"
     )
     st.rerun()
 
@@ -263,7 +277,7 @@ def main():
   if not check_password():
     return
 
-  # BARRA SUPERIOR DE VENTANA INSTITUCIONAL (Identica a la imagen)
+  # BARRA SUPERIOR DE VENTANA INSTITUCIONAL
   st.markdown(
       """
         <div class="win-header">
@@ -285,7 +299,7 @@ def main():
   # BOTONES DE LA TOOLBAR SUPERIOR
   col_tb1, col_tb2, col_tb3, col_tb4, _ = st.columns([1, 1.2, 1.2, 1.2, 4])
   with col_tb1:
-    if st.button("📂 Nuevo"):
+    if st.button("📂 Nuevo Fichaje"):
       popup_fichaje()
   with col_tb2:
     if st.button("💾 Guardar"):
@@ -321,8 +335,8 @@ def main():
       unsafe_allow_html=True,
   )
   st.markdown(
-      '<div class="terminal-text">>> AVISO: Recuerde que del 15 de Junio al 30'
-      " de Septiembre la jornada intensiva es de 6:30h.</div>",
+      '<div class="terminal-text">>> AVISO: Periodo de invierno activo (Jornada'
+      " estándar de 7:00h). Del 15 Jun al 30 Sep rige jornada de 6:30h.</div>",
       unsafe_allow_html=True,
   )
 
@@ -420,7 +434,10 @@ def main():
 
   elif menu == "✍️ Fichaje y Registro Diario":
     st.header("✍️ Fichaje Diario y Control Horario")
-    st.write("Haz clic abajo para abrir la ventana emergente de fichaje:")
+    st.write(
+        "Haz clic en el botón para abrir la ventana emergente de fichaje"
+        " (configurada con el objetivo de invierno de **7 horas**):"
+    )
 
     if st.button("➕ Abrir Ventana Emergente de Fichaje", type="primary"):
       popup_fichaje()
@@ -428,7 +445,7 @@ def main():
   elif menu == "🏖️ Vacaciones y Moscosos":
     st.header("🏖️ Gestor de Vacaciones y Moscosos")
 
-    if st.button("➕ Abrir Ventana Emergente para Añadir Permiso"):
+    if st.button("➕ Abrir Ventana Emergente para Añadir Permiso / Moscoso"):
       popup_vacaciones()
 
     st.markdown("<br>", unsafe_allow_html=True)
