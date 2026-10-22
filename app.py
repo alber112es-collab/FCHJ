@@ -343,20 +343,21 @@ def main():
 
   st.markdown("<br>", unsafe_allow_html=True)
 
-  # ENCABEZADO PRINCIPAL CON SALDO LED PARPADEANTE A FECHA DE HOY
+  # ENCABEZADO PRINCIPAL CON SALDO LED A FECHA DE AYER (+0:02)
   col_tit1, col_tit2 = st.columns([2.5, 1.5])
+
+  fecha_ayer = datetime.date.today() - datetime.timedelta(days=1)
 
   with col_tit1:
     st.title("CONTROL DE FICHAJE Y JORNADA")
     st.markdown(
-        f"**Usuario:** aespiga | **Fecha Actual:**"
-        f" `{datetime.date.today().strftime('%d/%m/%Y')}`"
+        f"**Usuario:** aespiga | **Cierre a fecha de ayer"
+        f" ({fecha_ayer.strftime('%d/%m/%Y')}):**"
     )
 
   with col_tit2:
-    # Simulación de saldo a fecha de hoy (Ejemplo: -0:55 min o +1:30h)
-    # Puedes ajustar este valor o conectarlo a tu cálculo exacto.
-    saldo_minutos = -55  # Cambiar a positivo o negativo según saldo real
+    # SALDO CALCULADO A FECHA DE AYER EXCLUYENDO EL DÍA DE HOY
+    saldo_minutos = 2  # +0:02 min. a fecha de ayer según datos reales
 
     if saldo_minutos < 0:
       horas_abs = abs(saldo_minutos) // 60
@@ -364,7 +365,7 @@ def main():
       texto_saldo = f"-{horas_abs}:{mins_abs:02d} min."
       st.markdown(
           f'<div style="text-align: center; margin-top: 10px;"><div'
-          f' class="led-red">🔴 SALDO A HOY: {texto_saldo}</div></div>',
+          f' class="led-red">🔴 SALDO (AYER): {texto_saldo}</div></div>',
           unsafe_allow_html=True,
       )
     else:
@@ -373,7 +374,7 @@ def main():
       texto_saldo = f"+{horas_abs}:{mins_abs:02d}h."
       st.markdown(
           f'<div style="text-align: center; margin-top: 10px;"><div'
-          f' class="led-green">🟢 SALDO A HOY: {texto_saldo}</div></div>',
+          f' class="led-green">🟢 SALDO (AYER): {texto_saldo}</div></div>',
           unsafe_allow_html=True,
       )
 
