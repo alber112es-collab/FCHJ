@@ -5,62 +5,111 @@ import pandas as pd
 import streamlit as st
 
 st.set_page_config(
-    page_title="Control de Fichaje Win98 - DGFP",
-    page_icon="💻",
+    page_title="S.I.C.P. - Control de Fichaje y Vacaciones DGFP",
+    page_icon="⚡",
     layout="wide",
 )
 
-# Estilo visual RETRO / Windows 98
-st.markdown("""
+# ESTILO VISUAL FIEL A LA IMAGEN (S.I.C.P. / Windows Clásico + Panel Izquierdo Negro)
+st.markdown(
+    """
     <style>
-    /* Fondo general estilo escritorio clásico (Verde cian o gris oscuro de Win98) */
+    /* Fondo principal estilo sistema clásico */
     .main {
-        background-color: #008080;
-        font-family: "MS Sans Serif", Arial, sans-serif;
+        background-color: #f3f2e8;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
-    /* Contenedores estilo ventana de Windows 98 */
-    .stApp {
-        background-color: #008080;
+    /* Panel lateral de la izquierda NEGRO */
+    [data-testid="stSidebar"] {
+        background-color: #1a1c23 !important;
+        border-right: 2px solid #333333;
+    }
+    [data-testid="stSidebar"] * {
+        color: #e2e8f0 !important;
     }
     
-    /* Cajas y métricas estilo ventana de diálogo */
-    .stMetric, div.stButton > button, div.stSelectbox, div.stDateInput, div.stTextInput, div.stTextArea {
-        background-color: #c0c0c0 !important;
-        border: 2px solid;
-        border-color: #ffffff #dfdfdf #dfdfdf #ffffff !important;
-        box-shadow: inset 1px 1px #0a0a0a, 1px 1px #ffffff;
-        color: #000000 !important;
-        border-radius: 0px !important;
-    }
-    
-    /* Botones clásicos Win98 */
-    div.stButton > button {
-        background-color: #c0c0c0 !important;
-        color: #000000 !important;
+    /* Barra superior institucional azul */
+    .win-header {
+        background: linear-gradient(90deg, #0b3c85 0%, #1d529e 100%);
+        color: white;
+        padding: 6px 12px;
         font-weight: bold;
-        padding: 5px 15px;
-        border: 2px solid;
-        border-color: #ffffff #808080 #808080 #ffffff !important;
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 4px 4px 0 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    div.stButton > button:active {
-        border-color: #808080 #ffffff #ffffff #808080 !important;
+    
+    /* Menú superior de texto */
+    .win-menu-bar {
+        background-color: #e8e6d9;
+        padding: 4px 10px;
+        font-size: 12px;
+        border-bottom: 1px solid #c0c0c0;
+        color: #222222;
+    }
+    .win-menu-bar span {
+        margin-right: 15px;
+        cursor: pointer;
+    }
+    
+    /* Toolbar de botones clásicos con borde biselado */
+    .win-toolbar {
+        background-color: #edebe0;
+        padding: 6px 10px;
+        border-bottom: 2px solid #d0cebe;
+        display: flex;
+        gap: 8px;
+    }
+    
+    /* Botones estilo clásico */
+    div.stButton > button {
+        background-color: #f0eee2 !important;
+        color: #111111 !important;
+        border: 1px solid #b5b3a3 !important;
+        box-shadow: 1px 1px 0px #ffffff inset, -1px -1px 0px #9a9889 inset;
+        border-radius: 3px !important;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    div.stButton > button:hover {
+        background-color: #e4e2d4 !important;
     }
 
-    /* Cabeceras de ventana clásica */
-    h1, h2, h3 {
-        color: #ffffff;
-        text-shadow: 2px 2px #000000;
-        font-family: "MS Sans Serif", Arial, sans-serif;
+    /* Consola o avisos estilo terminal */
+    .terminal-text {
+        font-family: 'Courier New', Courier, monospace;
+        color: #1e3a8a;
+        font-weight: bold;
+        font-size: 13px;
+        margin-bottom: 5px;
     }
     
-    /* Sidebar clásico */
-    [data-testid="stSidebar"] {
-        background-color: #c0c0c0;
-        border-right: 2px solid #808080;
+    /* Badge verde de SERVICIO ACTIVO */
+    .badge-activo {
+        background-color: #d1fae5;
+        color: #065f46;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        display: inline-block;
+    }
+
+    /* Cajas y métricas */
+    .stMetric {
+        background-color: #ffffff !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 4px !important;
+        padding: 10px !important;
     }
     </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 EXCEL_FILE = "Marcajes__2026_DGFP.xlsx"
 
@@ -79,17 +128,27 @@ def check_password():
       st.session_state["password_correct"] = False
 
   if "password_correct" not in st.session_state:
-    st.markdown("### 🗂️ Acceso al Sistema - Windows 98 Edition")
+    st.markdown(
+        '<div class="win-header">⚡ S.I.C.P. - Módulo de Fichaje y Registro de'
+        ' Jornada [SESIÓN: RESTRINGIDA]</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown("### 🔒 Acceso al Sistema")
     st.text_input("Usuario", key="username")
     st.text_input("Contraseña", type="password", key="password")
-    st.button("Aceptar", on_click=password_entered)
+    st.button("Iniciar Sesión", on_click=password_entered)
     return False
   elif not st.session_state["password_correct"]:
-    st.markdown("### 🗂️ Acceso al Sistema - Windows 98 Edition")
+    st.markdown(
+        '<div class="win-header">⚡ S.I.C.P. - Módulo de Fichaje y Registro de'
+        ' Jornada [SESIÓN: RESTRINGIDA]</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown("### 🔒 Acceso al Sistema")
     st.text_input("Usuario", key="username")
     st.text_input("Contraseña", type="password", key="password")
-    st.button("Aceptar", on_click=password_entered)
-    st.error("❌ Contraseña o usuario incorrecto. (Clave: unirioja112)")
+    st.button("Iniciar Sesión", on_click=password_entered)
+    st.error("❌ Usuario o contraseña incorrectos. (Clave: unirioja112)")
     return False
   else:
     return True
@@ -113,44 +172,214 @@ def get_target_hours(fecha_dt):
     return 7.0, "7h 00m (Estándar)"
 
 
+# VENTANA EMERGENTE (POPUP) PARA REGISTRO / FICHAJE DIARIO
+@st.dialog("✍️ Registrar / Modificar Fichaje Diario")
+def popup_fichaje():
+  st.write("Introduce los detalles de tu jornada laboral o incidencia:")
+
+  fecha_elegida = st.date_input(
+      "Selecciona la fecha:",
+      value=datetime.date(2026, 8, 3),
+      min_value=datetime.date(2026, 8, 1),
+      max_value=datetime.date(2027, 12, 31),
+  )
+
+  _, desc_regimen = get_target_hours(fecha_elegida)
+  st.info(f"🎯 **Jornada objetivo para este día**: {desc_regimen}")
+
+  col_a, col_b = st.columns(2)
+  with col_a:
+    estado_dia = st.selectbox(
+        "Tipo de día:",
+        ["Trabajo", "Festivo", "Vacaciones", "Moscoso", "Permiso", "Baja Médica"],
+    )
+    h_inicio = st.time_input("Hora de Entrada", value=datetime.time(7, 30))
+  with col_b:
+    h_final = st.time_input("Hora de Salida", value=datetime.time(14, 0))
+    observaciones = st.text_input("Observaciones")
+
+  t1 = datetime.datetime.combine(datetime.date.today(), h_inicio)
+  t2 = datetime.datetime.combine(datetime.date.today(), h_final)
+  diff = t2 - t1
+  h_trab = int(diff.total_seconds() // 3600)
+  m_trab = int((diff.total_seconds() % 3600) // 60)
+
+  st.write(f"⏱️ **Horas calculadas**: {h_trab}h {m_trab:02d}m")
+
+  if st.button("💾 Confirmar y Guardar Fichaje"):
+    st.success(
+        f"¡Fichaje registrado para el {fecha_elegida}! ({h_trab}h {m_trab:02d}m)"
+    )
+    st.rerun()
+
+
+# VENTANA EMERGENTE (POPUP) PARA VACACIONES Y MOSCOSOS CON SELECTOR
+@st.dialog("🏖️ Solicitar / Registrar Vacaciones o Moscosos")
+def popup_vacaciones():
+  st.write("Selecciona el tipo de permiso e introduce el rango de fechas:")
+
+  anno = st.radio("Año aplicable:", [2026, 2027], horizontal=True)
+
+  # SELECTOR PERMITE ELEGIR SI ES VACACIONES O MOSCOSOS
+  tipo_permiso = st.radio(
+      "Selecciona tipo de día:",
+      ["🌴 Día de Vacaciones", "📑 Día Moscoso / Asuntos Propios"],
+  )
+
+  col1, col2 = st.columns(2)
+  with col1:
+    f_inicio = st.date_input(
+        "Fecha de inicio",
+        value=datetime.date(anno, 11, 16)
+        if anno == 2026
+        else datetime.date(2027, 7, 1),
+    )
+  with col2:
+    f_fin = st.date_input(
+        "Fecha de fin",
+        value=datetime.date(anno, 11, 20)
+        if anno == 2026
+        else datetime.date(2027, 7, 5),
+    )
+
+  motivo = st.text_input("Observaciones o motivo (opcional)")
+
+  dias_solicitados = (f_fin - f_inicio).days + 1
+
+  st.write(
+      f"📊 **Total días a computar**: **{dias_solicitados} día(s)** como"
+      f" **{tipo_permiso}**."
+  )
+
+  if st.button("💾 Guardar Permiso en Sistema"):
+    st.success(
+        f"✅ ¡Se han registrado {dias_solicitados} día(s) de {tipo_permiso} para"
+        f" el año {anno}!"
+    )
+    st.rerun()
+
+
 def main():
   if not check_password():
     return
 
-  st.title("💻 Control de Fichaje y Vacaciones [DGFP]")
-  st.markdown("Sistema Operativo de Control Horario — Versión Clásica")
+  # BARRA SUPERIOR DE VENTANA INSTITUCIONAL (Identica a la imagen)
+  st.markdown(
+      """
+        <div class="win-header">
+            <span>⚡ S.I.C.P. - Módulo de Fichaje y Control Horario (v1.2.49) [SESIÓN: ADMIN_DGFP]</span>
+            <span>_ &nbsp; ▫ &nbsp; X</span>
+        </div>
+        <div class="win-menu-bar">
+            <span><b>Archivo</b></span>
+            <span><b>Edición</b></span>
+            <span><b>Ver</b></span>
+            <span><b>Herramientas</b></span>
+            <span><b>Seguridad</b></span>
+            <span><b>Ayuda</b></span>
+        </div>
+    """,
+      unsafe_allow_html=True,
+  )
 
-  base_sheets = load_base_sheets()
+  # BOTONES DE LA TOOLBAR SUPERIOR
+  col_tb1, col_tb2, col_tb3, col_tb4, _ = st.columns([1, 1.2, 1.2, 1.2, 4])
+  with col_tb1:
+    if st.button("📂 Nuevo"):
+      popup_fichaje()
+  with col_tb2:
+    if st.button("💾 Guardar"):
+      st.toast("Guardado correctamente")
+  with col_tb3:
+    if st.button("🖨️ Imprimir"):
+      st.toast("Enviando informe a la impresora...")
+  with col_tb4:
+    if st.button("🚪 Cerrar Sesión"):
+      st.session_state["password_correct"] = False
+      st.rerun()
 
-  # Menú lateral
-  st.sidebar.header("📂 Explorador Principal")
+  st.markdown("<br>", unsafe_allow_html=True)
+
+  # ENCABEZADO PRINCIPAL CON BADGE
+  col_tit1, col_tit2 = st.columns([3, 1])
+  with col_tit1:
+    st.title("CONTROL DE FICHAJE Y JORNADA - DGFP")
+    st.markdown(
+        "**Análisis de fichajes diarios, vacaciones y moscosos — DGFP.v2026-2027**"
+    )
+  with col_tit2:
+    st.markdown(
+        '<div style="text-align: right; padding-top:15px;"><span'
+        ' class="badge-activo">● SERVICIO ACTIVO</span></div>',
+        unsafe_allow_html=True,
+    )
+
+  # LÍNEAS DE TERMINAL ESTILO DE LA IMAGEN
+  st.markdown(
+      '<div class="terminal-text">>> ESTADO DEL ENTORNO: Conectado al nodo'
+      " central de fichaje de función pública.</div>",
+      unsafe_allow_html=True,
+  )
+  st.markdown(
+      '<div class="terminal-text">>> AVISO: Recuerde que del 15 de Junio al 30'
+      " de Septiembre la jornada intensiva es de 6:30h.</div>",
+      unsafe_allow_html=True,
+  )
+
+  st.markdown("---")
+
+  # MENÚ LATERAL EN NEGRO
+  st.sidebar.markdown("## 🗂️ MENÚ NEGRO")
   menu = st.sidebar.radio(
-      "Seleccionar aplicación:",
+      "Seleccionar módulo:",
       [
           "📅 Ver Calendario Mensual",
-          "✍️ Registrar / Fichaje Diario",
-          "🏖️ Vacaciones y Moscosos (2026 y 2027)",
+          "✍️ Fichaje y Registro Diario",
+          "🏖️ Vacaciones y Moscosos",
       ],
   )
 
+  base_sheets = load_base_sheets()
+
   if menu == "📅 Ver Calendario Mensual":
-    st.header("📅 Explorador de Calendarios Mensuales")
+    st.header("📅 Calendario Mensual de Jornada")
+
     col_m1, col_m2 = st.columns(2)
     with col_m1:
-      anno_sel = st.selectbox("Año", [2026, 2027], index=0)
+      anno_sel = st.selectbox("Año a consultar", [2026, 2027], index=0)
     with col_m2:
       mes_sel = st.selectbox(
           "Mes",
           [
-              "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-              "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+              "Enero",
+              "Febrero",
+              "Marzo",
+              "Abril",
+              "Mayo",
+              "Junio",
+              "Julio",
+              "Agosto",
+              "Septiembre",
+              "Octubre",
+              "Noviembre",
+              "Diciembre",
           ],
           index=7,
       )
 
     meses_num = {
-        "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4, "Mayo": 5, "Junio": 6,
-        "Julio": 7, "Agosto": 8, "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12,
+        "Enero": 1,
+        "Febrero": 2,
+        "Marzo": 3,
+        "Abril": 4,
+        "Mayo": 5,
+        "Junio": 6,
+        "Julio": 7,
+        "Agosto": 8,
+        "Septiembre": 9,
+        "Octubre": 10,
+        "Noviembre": 11,
+        "Diciembre": 12,
     }
     m_num = meses_num[mes_sel]
 
@@ -158,7 +387,15 @@ def main():
     fechas = [datetime.date(anno_sel, m_num, d) for d in range(1, num_dias + 1)]
 
     data_gen = []
-    dias_semana_nombres = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+    dias_semana_nombres = [
+        "lunes",
+        "martes",
+        "miércoles",
+        "jueves",
+        "viernes",
+        "sábado",
+        "domingo",
+    ]
 
     for f in fechas:
       d_sem = dias_semana_nombres[f.weekday()]
@@ -168,125 +405,86 @@ def main():
       data_gen.append({
           "Fecha": f.strftime("%Y-%m-%d"),
           "Día Semana": d_sem,
-          "Laboral/Festivo/Inc.": fest_lab,
-          "Inicio": "07:30:00" if fest_lab == "Trabajo" else "",
-          "Final": (
+          "Laboral/Festivo": fest_lab,
+          "Entrada": "07:30:00" if fest_lab == "Trabajo" else "",
+          "Salida": (
               ("14:00:00" if obj_h == 6.5 else "14:30:00")
               if fest_lab == "Trabajo"
               else ""
           ),
-          "H. Obligatorias": desc_obj,
+          "Objetivo": desc_obj,
           "Observaciones": "",
       })
 
-    df_gen = pd.DataFrame(data_gen)
-    st.dataframe(df_gen, use_container_width=True)
+    st.dataframe(pd.DataFrame(data_gen), use_container_width=True)
 
-  elif menu == "✍️ Registrar / Fichaje Diario":
-    st.header("✍️ Terminal de Fichaje Diario")
-    col_f1, col_f2 = st.columns(2)
-    with col_f1:
-      fecha_elegida = st.date_input(
-          "Selecciona el día a fichar:",
-          value=datetime.date(2026, 8, 3),
-          min_value=datetime.date(2026, 8, 1),
-          max_value=datetime.date(2027, 12, 31),
-      )
-    with col_f2:
-      _, desc_regimen = get_target_hours(fecha_elegida)
-      st.info(f"🎯 **Jornada objetivo**: {desc_regimen}")
+  elif menu == "✍️ Fichaje y Registro Diario":
+    st.header("✍️ Fichaje Diario y Control Horario")
+    st.write("Haz clic abajo para abrir la ventana emergente de fichaje:")
 
-    col_a, col_b = st.columns(2)
-    with col_a:
-      estado_dia = st.selectbox(
-          "Tipo de día / Incidencia:",
-          ["Trabajo", "Festivo", "Vacaciones", "Moscoso", "Permiso", "Baja Médica"],
-          index=0,
-      )
-      h_inicio = st.time_input("Hora de Inicio", value=datetime.time(7, 30))
-      h_final = st.time_input("Hora de Finalización", value=datetime.time(14, 0))
+    if st.button("➕ Abrir Ventana Emergente de Fichaje", type="primary"):
+      popup_fichaje()
 
-    with col_b:
-      observaciones_txt = st.text_area("Observaciones / Incidencias:")
-
-    t1 = datetime.datetime.combine(datetime.date.today(), h_inicio)
-    t2 = datetime.datetime.combine(datetime.date.today(), h_final)
-    diff = t2 - t1
-    h_trab = int(diff.total_seconds() // 3600)
-    m_trab = int((diff.total_seconds() % 3600) // 60)
-
-    horas_obj_val, _ = get_target_hours(fecha_elegida)
-    diferencia_minutos = (h_trab * 60 + m_trab) - int(horas_obj_val * 60)
-
-    st.metric(
-        "Horas Realizadas vs Objetivo",
-        f"{h_trab}h {m_trab:02d}m",
-        delta=f"{diferencia_minutos:+d} minutos respecto al objetivo",
-    )
-
-    if st.button("💾 Guardar Registro"):
-      st.success(
-          f"💾 ¡Guardado con éxito en el sistema para el **{fecha_elegida}**! Estado:"
-          f" **{estado_dia}** ({h_trab}h {m_trab:02d}m)."
-      )
-
-  elif menu == "🏖️ Vacaciones y Moscosos (2026 y 2027)":
+  elif menu == "🏖️ Vacaciones y Moscosos":
     st.header("🏖️ Gestor de Vacaciones y Moscosos")
-    st.markdown("Control de saldos y periodos vacacionales (2026 y 2027).")
 
+    if st.button("➕ Abrir Ventana Emergente para Añadir Permiso"):
+      popup_vacaciones()
+
+    st.markdown("<br>", unsafe_allow_html=True)
     tab_2026, tab_2027 = st.tabs(
-        ["📅 Año 2026 (Restantes: 3 Vacaciones)", "📅 Año 2027 (Totales: 22/8)"]
+        ["📅 Resumen 2026 (Restantes: 3 Vacaciones)", "📅 Resumen 2027 (22/8)"]
     )
 
     with tab_2026:
-      st.subheader("Control Vacaciones y Moscosos - 2026")
-
+      st.subheader("Saldos 2026")
       col_v1, col_v2, col_v3 = st.columns(3)
       with col_v1:
-        st.metric("Vacaciones 2026", "Disfrutadas: 5 / Totales: 8", "Restantes: 3 días")
+        st.metric(
+            "Vacaciones 2026", "5 Disfrutadas / 8 Totales", "Restantes: 3 días"
+        )
       with col_v2:
-        st.metric("Moscosos 2026", "Disfrutados: 3 / Totales: 3", "Restantes: 0 días")
+        st.metric(
+            "Moscosos 2026", "3 Disfrutados / 3 Totales", "Restantes: 0 días"
+        )
       with col_v3:
-        st.metric("Estado 2026", "Cierre de año", "✔ Al día")
+        st.metric("Cierre Año", "Noviembre / Diciembre", "Conforme")
 
-      st.markdown("#### Días de Vacaciones ya registrados en 2026:")
+      st.markdown("#### Registrados en 2026:")
       df_reg_2026 = pd.DataFrame({
-          "Concepto": ["Vacaciones", "Vacaciones", "Vacaciones", "Vacaciones", "Vacaciones"],
-          "Fecha / Periodo": [
-              "16 de Noviembre de 2026",
-              "17 de Noviembre de 2026",
-              "18 de Noviembre de 2026",
-              "19 de Noviembre de 2026",
-              "20 de Noviembre de 2026",
+          "Concepto": [
+              "Vacaciones",
+              "Vacaciones",
+              "Vacaciones",
+              "Vacaciones",
+              "Vacaciones",
           ],
-          "Estado": ["Disfrutado", "Disfrutado", "Disfrutado", "Disfrutado", "Disfrutado"]
+          "Fecha": [
+              "16/11/2026",
+              "17/11/2026",
+              "18/11/2026",
+              "19/11/2026",
+              "20/11/2026",
+          ],
+          "Estado": [
+              "Disfrutado",
+              "Disfrutado",
+              "Disfrutado",
+              "Disfrutado",
+              "Disfrutado",
+          ],
       })
       st.dataframe(df_reg_2026, use_container_width=True)
 
-      st.markdown("---")
-      st.markdown("#### ➕ Introducir nuevo día / periodo de Vacaciones (2026)")
-      f_ini_26 = st.date_input("Fecha de inicio (2026)", value=datetime.date(2026, 11, 16), key="f_i_26")
-      f_fin_26 = st.date_input("Fecha de fin (2026)", value=datetime.date(2026, 11, 20), key="f_f_26")
-      if st.button("Registrar Vacaciones 2026", key="btn_26"):
-        st.success("¡Vacaciones de 2026 registradas correctamente en el sistema!")
-
     with tab_2027:
-      st.subheader("Control Vacaciones y Moscosos - 2027")
-
+      st.subheader("Saldos 2027")
       col_71, col_72 = st.columns(2)
       with col_71:
-        st.metric("Vacaciones 2027", "Total disponibles: 22 días", "Restantes: 22")
+        st.metric(
+            "Vacaciones 2027", "Disponibles: 22 días", "22 días restantes"
+        )
       with col_72:
-        st.metric("Moscosos 2027", "Total disponibles: 8 días", "Restantes: 8")
-
-      st.markdown("#### ➕ Introducir Vacaciones o Moscosos para 2027")
-      tipo_permiso_27 = st.selectbox("Selecciona tipo:", ["Vacaciones (22 días)", "Moscosos (8 días)"], key="tp_27")
-      f_ini_27 = st.date_input("Fecha de inicio (2027)", value=datetime.date(2027, 7, 1), key="f_i_27")
-      f_fin_27 = st.date_input("Fecha de fin (2027)", value=datetime.date(2027, 7, 5), key="f_f_27")
-      observacion_27 = st.text_input("Motivo / Observaciones (Opcional)", key="obs_27")
-
-      if st.button("💾 Guardar Solicitud 2027", key="btn_27"):
-        st.success("¡Registrado con éxito para 2027! Se han descontado los días correspondientes.")
+        st.metric("Moscosos 2027", "Disponibles: 8 días", "8 días restantes")
 
 
 if __name__ == "__main__":
