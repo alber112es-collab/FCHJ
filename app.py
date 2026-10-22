@@ -10,6 +10,35 @@ st.set_page_config(
     layout="wide",
 )
 
+# Estilo visual corporativo y limpio similar a tus otras apps de Streamlit
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f8f9fa;
+    }
+    .stMetric {
+        background-color: #ffffff;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #f1f5f9;
+        border-radius: 6px 6px 0px 0px;
+        padding: 10px 20px;
+        font-weight: 600;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #2563eb !important;
+        color: white !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 EXCEL_FILE = "Marcajes__2026_DGFP.xlsx"
 
 
@@ -27,13 +56,13 @@ def check_password():
       st.session_state["password_correct"] = False
 
   if "password_correct" not in st.session_state:
-    st.markdown("### 🔒 Acceso Restringido - Control de Fichaje")
+    st.markdown("### 🔒 Acceso Restringido - Control DGFP")
     st.text_input("Usuario", key="username")
     st.text_input("Contraseña", type="password", key="password")
     st.button("Iniciar Sesión", on_click=password_entered)
     return False
   elif not st.session_state["password_correct"]:
-    st.markdown("### 🔒 Acceso Restringido - Control de Fichaje")
+    st.markdown("### 🔒 Acceso Restringido - Control DGFP")
     st.text_input("Usuario", key="username")
     st.text_input("Contraseña", type="password", key="password")
     st.button("Iniciar Sesión", on_click=password_entered)
@@ -65,14 +94,13 @@ def main():
   if not check_password():
     return
 
-  st.title(
-      "⏱️ Control de Fichaje, Vacaciones y Moscosos (2026 - 2027) - DGFP"
-  )
+  st.title("⏱️ Control de Fichaje, Vacaciones y Moscosos")
+  st.markdown("Dirección General de Función Pública (DGFP) — Panel de Control Plurianual")
 
   base_sheets = load_base_sheets()
 
   # Menú lateral
-  st.sidebar.header("Menú de Navegación")
+  st.sidebar.header("Menú Principal")
   menu = st.sidebar.radio(
       "Selecciona sección:",
       [
@@ -91,35 +119,15 @@ def main():
       mes_sel = st.selectbox(
           "Mes",
           [
-              "Enero",
-              "Febrero",
-              "Marzo",
-              "Abril",
-              "Mayo",
-              "Junio",
-              "Julio",
-              "Agosto",
-              "Septiembre",
-              "Octubre",
-              "Noviembre",
-              "Diciembre",
+              "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+              "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
           ],
           index=7,
       )
 
     meses_num = {
-        "Enero": 1,
-        "Febrero": 2,
-        "Marzo": 3,
-        "Abril": 4,
-        "Mayo": 5,
-        "Junio": 6,
-        "Julio": 7,
-        "Agosto": 8,
-        "Septiembre": 9,
-        "Octubre": 10,
-        "Noviembre": 11,
-        "Diciembre": 12,
+        "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4, "Mayo": 5, "Junio": 6,
+        "Julio": 7, "Agosto": 8, "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12,
     }
     m_num = meses_num[mes_sel]
 
@@ -127,15 +135,7 @@ def main():
     fechas = [datetime.date(anno_sel, m_num, d) for d in range(1, num_dias + 1)]
 
     data_gen = []
-    dias_semana_nombres = [
-        "lunes",
-        "martes",
-        "miércoles",
-        "jueves",
-        "viernes",
-        "sábado",
-        "domingo",
-    ]
+    dias_semana_nombres = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
 
     for f in fechas:
       d_sem = dias_semana_nombres[f.weekday()]
@@ -160,7 +160,7 @@ def main():
     st.dataframe(df_gen, use_container_width=True)
 
   elif menu == "✍️ Registrar / Fichaje Diario":
-    st.header("✍️ Registro y Marcaje Diario Avanzado")
+    st.header("✍️ Registro y Marcaje Diario")
     col_f1, col_f2 = st.columns(2)
     with col_f1:
       fecha_elegida = st.date_input(
@@ -177,14 +177,7 @@ def main():
     with col_a:
       estado_dia = st.selectbox(
           "Tipo de día / Incidencia:",
-          [
-              "Trabajo",
-              "Festivo",
-              "Vacaciones",
-              "Moscoso",
-              "Permiso",
-              "Baja Médica",
-          ],
+          ["Trabajo", "Festivo", "Vacaciones", "Moscoso", "Permiso", "Baja Médica"],
           index=0,
       )
       h_inicio = st.time_input("Hora de Inicio", value=datetime.time(7, 30))
@@ -208,7 +201,7 @@ def main():
         delta=f"{diferencia_minutos:+d} minutos respecto al objetivo",
     )
 
-    if st.button("💾 Guardar y Registrar Fichaje"):
+    if st.button("💾 Guardar y Registrar Fichaje", type="primary"):
       st.success(
           f"✅ ¡Registrado con éxito para el **{fecha_elegida}**! Estado:"
           f" **{estado_dia}** ({h_trab}h {m_trab:02d}m)."
@@ -216,9 +209,7 @@ def main():
 
   elif menu == "🏖️ Vacaciones y Moscosos (2026 y 2027)":
     st.header("🏖️ Control de Vacaciones y Moscosos")
-    st.markdown(
-        "Gestión separada y sencilla para los años **2026** y **2027**."
-    )
+    st.markdown("Gestión detallada de saldos y periodos para los años **2026** y **2027**.")
 
     tab_2026, tab_2027 = st.tabs(
         ["📅 Año 2026 (Restantes: 3 Vacaciones)", "📅 Año 2027 (Totales: 22/8)"]
@@ -227,20 +218,13 @@ def main():
     with tab_2026:
       st.subheader("Control Vacaciones y Moscosos - 2026")
 
-      # Métricas claras 2026
       col_v1, col_v2, col_v3 = st.columns(3)
       with col_v1:
-        st.metric(
-            "Vacaciones 2026",
-            "Disfrutadas: 5 / Totales: 8",
-            "Restantes: 3 días",
-        )
+        st.metric("Vacaciones 2026", "Disfrutadas: 5 / Totales: 8", "Restantes: 3 días")
       with col_v2:
-        st.metric(
-            "Moscosos 2026", "Disfrutados: 3 / Totales: 3", "Restantes: 0 días"
-        )
+        st.metric("Moscosos 2026", "Disfrutados: 3 / Totales: 3", "Restantes: 0 días")
       with col_v3:
-        st.metric("Estado", "Actualizado", "✔ Al día")
+        st.metric("Estado 2026", "Cierre de año", "✔ Al día")
 
       st.markdown("#### Días de Vacaciones ya registrados en 2026:")
       df_reg_2026 = pd.DataFrame({
@@ -260,13 +244,12 @@ def main():
       st.markdown("#### ➕ Introducir nuevo día / periodo de Vacaciones (2026)")
       f_ini_26 = st.date_input("Fecha de inicio (2026)", value=datetime.date(2026, 11, 16), key="f_i_26")
       f_fin_26 = st.date_input("Fecha de fin (2026)", value=datetime.date(2026, 11, 20), key="f_f_26")
-      if st.button("Registrar Vacaciones 2026"):
+      if st.button("Registrar Vacaciones 2026", key="btn_26"):
         st.success("¡Vacaciones de 2026 registradas correctamente en el sistema!")
 
     with tab_2027:
       st.subheader("Control Vacaciones y Moscosos - 2027")
 
-      # Métricas 2027
       col_71, col_72 = st.columns(2)
       with col_71:
         st.metric("Vacaciones 2027", "Total disponibles: 22 días", "Restantes: 22")
@@ -279,8 +262,8 @@ def main():
       f_fin_27 = st.date_input("Fecha de fin (2027)", value=datetime.date(2027, 7, 5), key="f_f_27")
       observacion_27 = st.text_input("Motivo / Observaciones (Opcional)", key="obs_27")
 
-      if st.button("💾 Guardar Solicitud 2027"):
-        st.success(f"¡Registrado con éxito para 2027! Se han descontado los días correspondientes.")
+      if st.button("💾 Guardar Solicitud 2027", key="btn_27"):
+        st.success("¡Registrado con éxito para 2027! Se han descontado los días correspondientes.")
 
 
 if __name__ == "__main__":
